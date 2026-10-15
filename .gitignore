@@ -1,0 +1,25 @@
+# 构建产物
+target/
+dist/
+# 依赖
+node_modules/
+# 本机专属 Maven 仓库（体积大且可再生，勿入库）
+m2repo/
+# 日志与临时文件
+*.log
+logs/
+work/
+cases/
+data/
+smoke-logs/
+qa-*.log
+run*.log
+qa-*.log
+# 本地环境（真实密码在这里，绝不入库）
+.env
+# IDE
+.idea/
+*.iml
+# OS
+Thumbs.db
+.DS_Store

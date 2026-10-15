@@ -1,0 +1,69 @@
+# resume-copilot 配置。模型 API Key 用环境变量注入，不落盘不进 git。
+server:
+  port: 8083
+
+spring:
+  application:
+    name: resume-copilot
+  servlet:
+    multipart:
+      max-file-size: 10MB     # 简历 PDF 上限（计划书：只收单栏文本 PDF，扫描件拒收在应用层判）
+  datasource:
+    url: jdbc:mysql://localhost:3306/resume_copilot?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    # 密码走环境变量，本地未配置时用占位（本地开发请设置 SPRING_DATASOURCE_PASSWORD）
+    password: ${SPRING_DATASOURCE_PASSWORD:changeme}
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      # 显式 UTF-8：不写这行时 ScriptUtils 用平台默认编码（Windows 是 GBK），
+      # 中文别名会被乱码写进 t_skill_alias——单测读的是 classpath 原文所以全绿，
+      # 生产库却是脏的。编码口径必须钉死，不随操作系统漂移（真实踩坑，冒烟抓到）。
+      encoding: UTF-8
+
+  # Spring AI OpenAI 兼容 starter：base-url 换成任一兼容网关即可切模型（DeepSeek 示例注释）
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-local-dev-placeholder}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      chat:
+        options:
+          model: gpt-4o-mini
+          # 抽取任务要"确定性优先"：temperature 低（0.1）——LLM 应用工程常识，面试可讲
+          temperature: 0.1
+    # 模型开关（Spring AI 2.x 的 spring.ai.model.* 条件属性）：
+    # embedding 默认 none——不配 OPENAI_API_KEY 时根本不创建 EmbeddingModel bean，
+    # 匹配引擎按 @Autowired(required=false) 拿到 null，语义通道自动跳过并在报告里标注
+    # "语义通道未启用"（优雅降级不靠 try/catch 救火，靠装配期就不存在，这是设计点）。
+    # 配了真实 key 想开语义通道：设环境变量 SPRING_AI_MODEL_EMBEDDING=openai。
+    model:
+      embedding: ${SPRING_AI_MODEL_EMBEDDING:none}
+
+resume-copilot:
+  upload-dir: ./data/uploads
+  prompt-version: v1           # 与 t_prompt_version 对应，抽取结果的"出身"要可追溯（计划书 5.4）
+  # 评测跑批 ADMIN 语义的轻量口令：无鉴权体系时用请求头 X-Admin-Token 校验，README 有说明
+  admin-token: ${ADMIN_TOKEN:local-admin}
+  eval:
+    # 金标准文件位置。启动方式不同 classpath 形态不同，EvalRunner 按
+    # [这里配置] -> [classpath:eval/golden.jsonl] -> [src/test/resources 相对路径] 依次尝试
+    golden-location: ${EVAL_GOLDEN:classpath:eval/golden.jsonl}
+  match:
+    # 五维权重（计划书 5.3"权重可配置"）：和必须为 1，改权重=改口径，报告 detail_json 里整组留痕
+    weight-skill: 0.35          # 技能覆盖
+    weight-experience: 0.25     # 经历相关性
+    weight-years: 0.15          # 年限匹配
+    weight-depth: 0.15          # 项目深度
+    weight-expression: 0.10     # 表达质量
+    # 语义通道判"弱覆盖"的余弦相似度阈值：低了近邻词会虚增覆盖（假阳性贵），宁高勿低
+    semantic-threshold: 0.85
+    advice-max-items: 3         # 一次 SSE 最多为几条低分项生成建议（token 成本护栏）
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com.resumecopilot: debug

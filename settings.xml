@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 本项目专用 Maven 配置：依赖仓库就在本目录 m2repo/ 下，与其它项目完全隔离。
+     构建示例：mvn -s settings.xml -f pom.xml clean compile -->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <localRepository>./m2repo</localRepository>
+  <mirrors>
+    <mirror>
+      <id>aliyun-central</id>
+      <mirrorOf>central</mirrorOf>
+      <name>Aliyun Central Mirror</name>
+      <url>https://maven.aliyun.com/repository/central</url>
+    </mirror>
+  </mirrors>
+</settings>

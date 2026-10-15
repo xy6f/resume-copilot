@@ -1,0 +1,21 @@
+{
+  "name": "resume-copilot-frontend",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Resume Copilot 前端 —— Vue 3 + Vite + Element Plus + Pinia（纯 JavaScript）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "element-plus": "^2.9.0",
+    "pinia": "^2.3.0",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.7"
+  }
+}
