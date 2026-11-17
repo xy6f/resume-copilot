@@ -20,34 +20,44 @@
     </div>
 
     <template v-if="report">
-      <!-- 总分圆环 + 五维 + 元信息 -->
-      <div class="grid-2 report-top">
-        <div class="glass card score-card">
-          <ScoreDonut :score="totalScore" />
-          <div class="score-side">
-            <span class="grade-badge">{{ grade }}</span>
-            <div class="meta-lines">
-              promptVersion <b>{{ d.promptVersion }}</b> · model <b>{{ d.model || '—' }}</b>
-              · 别名字典 <b>{{ d.aliasDictionarySize }}</b> 条<br>
-              匹配通道：
-              <span v-if="d.semanticChannelEnabled" class="chan-on">SEMANTIC 已启用</span>
-              <template v-else>
-                <span class="chan-off">仅规则通道</span>（{{ esc(d.semanticNote || '未配置 embedding 模型，装配期即跳过') }}）
-              </template><br>
-              证据闸丢弃：
-              <b v-if="d.discardedSkills?.length" style="color:var(--rose)">{{ d.discardedSkills.join('、') }}</b>
-              <b v-else>无</b>
-              <template v-if="!d.discardedSkills?.length">（幻觉防线 0 拦截——本份无非法证据）</template>
+      <!-- 总分卡：圆环居左 200px + 右侧三行摘要（评级/最强维度/最弱维度） -->
+      <div class="glass card score-card report-top">
+        <ScoreDonut :score="totalScore" />
+        <div class="score-side">
+          <span class="grade-badge">{{ grade }}</span>
+          <div class="score-summary">
+            <div class="sum-row">
+              <span class="sum-tag best">最强</span>
+              <b>{{ bestDim.name }}</b><span>{{ bestDim.val }} 分</span>
+            </div>
+            <div class="sum-row">
+              <span class="sum-tag worst">最弱</span>
+              <b>{{ worstDim.name }}</b><span>{{ worstDim.val }} 分</span>
             </div>
           </div>
-        </div>
-        <div class="glass card">
-          <div class="card-head">
-            <h2>五维得分</h2>
-            <small class="dim-weights-note">{{ weightNote }}</small>
+          <div class="meta-lines">
+            promptVersion <b>{{ d.promptVersion }}</b> · model <b>{{ d.model || '—' }}</b>
+            · 别名字典 <b>{{ d.aliasDictionarySize }}</b> 条<br>
+            匹配通道：
+            <span v-if="d.semanticChannelEnabled" class="chan-on">SEMANTIC 已启用</span>
+            <template v-else>
+              <span class="chan-off">仅规则通道</span>（{{ esc(d.semanticNote || '未配置 embedding 模型，装配期即跳过') }}）
+            </template><br>
+            证据闸丢弃：
+            <b v-if="d.discardedSkills?.length" style="color:var(--red)">{{ d.discardedSkills.join('、') }}</b>
+            <b v-else>无</b>
+            <template v-if="!d.discardedSkills?.length">（幻觉防线 0 拦截——本份无非法证据）</template>
           </div>
-          <DimBars :dimensions="d.dimensions || {}" />
         </div>
+      </div>
+
+      <!-- 五维条形：自总分卡下移，独立整行 -->
+      <div class="glass card" style="margin-top:18px">
+        <div class="card-head">
+          <h2>五维得分</h2>
+          <small class="dim-weights-note">{{ weightNote }}</small>
+        </div>
+        <DimBars :dimensions="d.dimensions || {}" />
       </div>
 
       <!-- 覆盖矩阵 -->
@@ -106,13 +116,34 @@ const weightNote = computed(() => {
   return `权重 ${(w.skill ?? 0.35)}/${(w.experience ?? 0.25)}/${(w.years ?? 0.15)}/${(w.depth ?? 0.15)}/${(w.expression ?? 0.1)}`
 })
 
+/* 三行摘要用：五维里最强/最弱维度（无数据时回退占位） */
+const DIM_LABELS = {
+  skillCoverage: '技能覆盖',
+  experienceRelevance: '经历相关性',
+  yearsFit: '年限匹配',
+  projectDepth: '项目深度',
+  expressionQuality: '表达质量',
+}
+const bestDim = computed(() => {
+  const entries = Object.entries(d.value.dimensions || {})
+  if (!entries.length) return { name: '—', val: '—' }
+  const [key, val] = entries.reduce((a, b) => (b[1] >= a[1] ? b : a))
+  return { name: DIM_LABELS[key] || key, val: Math.round(Number(val)) }
+})
+const worstDim = computed(() => {
+  const entries = Object.entries(d.value.dimensions || {})
+  if (!entries.length) return { name: '—', val: '—' }
+  const [key, val] = entries.reduce((a, b) => (b[1] <= a[1] ? b : a))
+  return { name: DIM_LABELS[key] || key, val: Math.round(Number(val)) }
+})
+
 async function runMatch () {
   if (!wizard.resumeId || !wizard.jdId) {
     status.value = { kind: 'err', html: '前置条件不满足：需要已摄取简历 + 已提交 JD' }
     return
   }
-  busy.value.match = true
-  status.value = { kind: 'busy', html: 'POST /api/match 生成报告（纯规则通道，无需模型）…' }
+    busy.value.match = true
+    status.value = { kind: 'busy', html: '<span class="breath"><i></i><i></i><i></i></span> 正在生成匹配报告（纯规则通道，无需模型）…' }
   try {
     const created = await fetchJson('POST', '/api/match', {
       body: { resumeId: wizard.resumeId, jdId: wizard.jdId },
@@ -144,7 +175,7 @@ function pullAdvice () {
 
 async function runEval () {
   busy.value.eval = true
-  status.value = { kind: 'busy', html: '跑评测（评测不依赖模型，无 key 环境同样可跑）…' }
+  status.value = { kind: 'busy', html: '<span class="breath"><i></i><i></i><i></i></span> 正在跑评测（评测不依赖模型，无 key 环境同样可跑）…' }
   try {
     evalReport.value = await fetchJson('POST', '/api/eval/run', {
       headers: { 'X-Admin-Token': adminToken.value.trim() || DEFAULT_ADMIN_TOKEN },

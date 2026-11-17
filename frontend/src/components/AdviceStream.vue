@@ -8,6 +8,11 @@
     <div v-if="errMsg" class="msg err">{{ errMsg }}</div>
 
     <template v-if="started">
+      <!-- 生成中（尚无首 token）：三点呼吸加载，比 spinner 现代 -->
+      <div v-if="streaming && !text" class="breath-row">
+        <span class="breath"><i></i><i></i><i></i></span>
+        <span class="muted">正在生成改写建议…</span>
+      </div>
       <div v-if="text" class="advice-stream">{{ text }}<span v-if="streaming" class="advice-cursor">▊</span></div>
       <div v-for="(item, i) in doneItems" :key="i" class="advice-done-tag">
         ✓ 第 {{ item.index }} 条建议已落库 #{{ item.adviceId }}（针对：{{ item.targetSkill }} · {{ item.status }}）
@@ -178,5 +183,8 @@ defineExpose({ stream, reset })
 /* 采纳/忽略按钮组：贴在同一条落库提示之后（全局 .btn 体系内的 mini 尺寸补丁） */
 .advice-decide { margin-left: 8px; display: inline-flex; gap: 6px; vertical-align: middle; }
 .advice-decide .btn.mini { padding: 2px 10px; font-size: 11px; line-height: 1.6; }
-.advice-decided { color: var(--cyan, #39c5bb); font-weight: 600; }
+.advice-decided { color: var(--brand, #7c5cfc); font-weight: 600; }
+/* 生成中呼吸行：与流式文本区同视觉起点 */
+.breath-row { display: flex; align-items: center; gap: 10px; padding: 12px 16px; }
+.breath-row .breath { font-size: 0; }
 </style>

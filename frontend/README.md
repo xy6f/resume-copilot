@@ -1,8 +1,49 @@
 # Resume Copilot 前端（Vue 3 + Vite + Element Plus + Pinia）
 
 简历 × JD 匹配助手的前端，v2.0 从原生三件套升级为 Vue 3 工程化版本（纯 JavaScript，无 TypeScript）。
-三步向导的交互语义、覆盖矩阵、SSE 解析、503 解锁卡等逻辑全部继承旧版 `app.js`，视觉保留
-琥珀→玫红能量设计与 `#0b1020` 玻璃拟态（`src/styles/tokens.css`），叠加 Element Plus 暗色主题。
+三步向导的交互语义、覆盖矩阵、SSE 解析、503 解锁卡等逻辑全部继承旧版 `app.js`。
+v3.0 视觉重设计为"浅色 AI 产品感"（对标 Gamma / Kimi 智能助手），设计系统见 `src/styles/tokens.css`。
+
+## v3.0 设计说明（浅色 AI 产品感）
+
+设计基调：现代 AI 应用不再用深色科技风，而是**浅色 + 品牌渐变点缀 + 大圆角 + 呼吸感**。
+业务逻辑与 API 层零改动，全部变化在样式层与少量展示性模板（进度轨结构、摘要行、呼吸点）。
+
+### 1. 底色与卡片
+
+- 主底 `#FCFCFD`，白卡片 `#ffffff`，大圆角 16px（`--radius`），柔和阴影 `0 1px 3px rgba(0,0,0,.06)`（hover 升为 `--shadow-pop`）。
+- 暗色主题保留可切换：顶栏月亮/太阳按钮 + `localStorage`（key `rc-theme`）持久化，`index.html` 内联首帧防闪脚本，`html.dark` 整套路由到暗色变量并保留 EP dark css-vars 共存。
+
+### 2. 品牌色系统（收敛为单一主色）
+
+- 主色 `#7C5CFC`（紫，Kimi/Gamma 系），语义色仅保留状态用途（成功/失败/弱覆盖）。
+- 渐变 `--grad`（`#9B7BFF → #7C5CFC → #6A4BE0`）**只用于三处**：
+  1. Stepper 当前步圆点激活态；
+  2. 总分圆环描边（SVG `linearGradient#donutGrad`）；
+  3. 主 CTA 按钮（`.btn.primary`）。
+  其余全部单色：五维条形、chips、时间线竖线、日志徽标等均为品牌色/中性色单色。
+
+### 3. AI 感细节
+
+- **三点呼吸加载**：`.breath`（三个错峰 0.2s 的弹跳渐隐圆点），用于摄取/生成/评测 busy 状态条与建议流首 token 前的等待行，替代 spinner。
+- **建议流式文本区**：左侧 2px 品牌渐变竖线（`.advice-stream::before`），AI 输出区的视觉标识。
+- **解锁卡浅紫化**：`UnlockCard` 由琥珀警示改为浅紫底（`--brand-soft`）+ 浅紫边（`--brand-border`）+ 品牌紫描边锁图标——AI 产品把"未解锁"做成 feature 引导而非警告。
+
+### 4. Stepper 重设计（Gamma 式竖向进度轨）
+
+顶部横向 el-steps 替换为**左侧竖向进度轨**（纯 CSS/模板实现，非组件库）：圆点 + 2px 连线 + 步骤名 + 副标题。
+完成步为品牌色实心圆点带对勾色，当前步为品牌渐变填充圆点 + 外圈 6px 浅紫光环（`box-shadow: 0 0 0 6px var(--brand-soft)`）。
+步骤名仍可点击跳转（`wizard.goto` 前置校验原样保留）。
+
+### 5. 报告页信息层级重排
+
+- 总分卡：圆环居左放大到 **200px**，右侧改为**三行摘要**——评级徽章（渐变）/ 最强维度（绿 tag）/ 最弱维度（琥珀 tag），promptVersion/通道/证据闸元信息收在摘要下方。
+- **五维条形自总分卡下移**，独立整行展示。
+- 覆盖矩阵：行高统一 **48px**，✓ / ~ / ✗ 状态图标 18px 字重、去底色徽章改为纯色字符（矩阵更"数据密集"，弱化装饰）。
+
+### 6. EP 变量桥
+
+`:root` 直接桥接 `--el-color-primary: var(--brand)`（即 `#7C5CFC`）及 text/border/fill 系列变量，el-input/el-table/el-popover/ElMessage 自动跟随品牌色与主题切换。
 
 ## 快速开始
 
@@ -26,7 +67,7 @@ npm run preview      # 预览 dist/
 | 框架 | Vue 3 SFC（`<script setup>`，纯 JS） | `src/` |
 | UI | Element Plus 2 暗色主题（el-steps/el-table/el-popover/el-tooltip/el-drawer/el-input/ElMessage） | `main.js` 全量引入 |
 | 状态 | Pinia：`wizard`（resumeId/jdId/reportId 流转 + 步骤前置校验）、`apiLog`（最近 80 条请求日志） | `src/stores/` |
-| 设计系统 | tokens.css：CSS 变量 + 玻璃拟态 + 能量渐变，并与 EP 暗色变量桥接 | `src/styles/` |
+| 设计系统 | tokens.css v3：浅色 AI 产品感 + 单一品牌色 #7C5CFC + EP 变量桥（html.dark 暗色可切换） | `src/styles/` |
 
 ```
 frontend/

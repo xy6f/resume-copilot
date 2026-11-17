@@ -45,9 +45,9 @@
       </el-table>
     </div>
     <div class="legend">
-      <span style="color:var(--green)">✓ 覆盖 {{ counts.COVERED }}</span>
-      <span style="color:var(--amber)">~ 弱覆盖 {{ counts.WEAK }}</span>
-      <span style="color:var(--red)">✗ 缺失 {{ counts.MISSING }}</span>
+      <span class="st-COVERED">✓ 覆盖 {{ counts.COVERED }}</span>
+      <span class="st-WEAK">~ 弱覆盖 {{ counts.WEAK }}</span>
+      <span class="st-MISSING">✗ 缺失 {{ counts.MISSING }}</span>
     </div>
   </div>
 </template>

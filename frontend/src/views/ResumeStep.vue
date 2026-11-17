@@ -115,10 +115,10 @@
           <polyline
             v-if="scoredPoints.length > 1"
             :points="scoredPoints.map(p => `${p.x},${p.y}`).join(' ')"
-            fill="none" stroke="var(--cyan)" stroke-width="1.8" stroke-linejoin="round"
+            fill="none" stroke="var(--brand)" stroke-width="1.8" stroke-linejoin="round"
           />
           <template v-for="(p, i) in historyPoints" :key="i">
-            <circle v-if="p.scored" :cx="p.x" :cy="p.y" r="3.4" fill="var(--cyan)">
+            <circle v-if="p.scored" :cx="p.x" :cy="p.y" r="3.4" fill="var(--brand)">
               <title>#{{ p.resumeId }} · {{ p.totalScore }} 分</title>
             </circle>
             <circle v-else :cx="p.x" :cy="hY(0)" r="3" fill="none" stroke="#8b93b5" stroke-width="1.2">
@@ -304,5 +304,5 @@ async function ingest () {
   list-style: none; margin: 0; padding: 0; font-size: 12px; color: var(--muted);
   display: flex; flex-direction: column; gap: 4px; min-width: 180px;
 }
-.history-score { color: var(--cyan); }
+.history-score { color: var(--brand); }
 </style>
